@@ -41,10 +41,10 @@ struct list {
 	};
 
 	private:
-		ListNode* add_node(std::string data, ListNode* rand, ListNode* prev) {
+		ListNode* add_node(const std::string& data, ListNode* rand, ListNode* next, ListNode* prev) {
 			auto node = new ListNode;
 			node->data = data;
-			node->next = nullptr;
+			node->next = next;
 			node->prev = prev;
 			node->rand = rand;
 			return node;
@@ -65,13 +65,13 @@ struct list {
 	iterator begin() const { return iterator(head); }
 	iterator end() const { return iterator(tail); }
 
-	ListNode* insert_head(std::string data, ListNode* rand) {
+	ListNode* insert_front(std::string data, ListNode* rand) {
 		if (head == nullptr) {
-			head = add_node(data, rand, nullptr); tail = head;
+			head = add_node(data, rand, nullptr, nullptr); tail = head;
 			return head;
 		}
 		auto tmp = head;
-		head = add_node(data, rand, nullptr);
+		head = add_node(data, rand, nullptr, nullptr);
 		head->next = tmp;
 		tmp->prev = head;
 		return head;
@@ -86,7 +86,6 @@ struct list {
 		}
 	}
 
-
 };
 
 static void print_help() {
@@ -94,26 +93,7 @@ static void print_help() {
 	std::cout << "       -o <filename> \t | output file";
 }
 
-void shitlist_to_binfile(const list& shitlist, fs::path& path) {
-	std::ofstream file(path.string());
-	if (!file.is_open()) {
-		auto err = std::string("cant open dest file: ");
-		err += path.string();
-		throw std::runtime_error(err);
-	}
-	
-	for (auto&& node : shitlist) {
-		std::string data = node.data;
-		std::string rand = std::to_string(shitlist.find_idx(node.rand));
-		file << data;
-		file << ";";
-		file << rand;
-	}
-
-	file.close();
-}
-
-std::vector<std::string> file_to_vector_string(fs::path& filepath) {
+static std::vector<std::string> file_to_vector_string(fs::path& filepath) {
 	std::vector<std::string> data;
 	std::ifstream file(filepath.filename().string());
 	if (file.is_open()) {
@@ -133,27 +113,53 @@ std::vector<std::string> file_to_vector_string(fs::path& filepath) {
 	return data;
 }
 
-list vector_string_to_shitlist(const std::vector<std::string>& data) {
+static list vector_string_to_shitlist(const std::vector<std::string>& data) {
 	list shitlist;
 	for (const auto& str : data) {
 		ListNode* rand = nullptr;
 		auto iter = std::find(str.begin(), str.end(), ';');
 		auto node_data = std::string(str.begin(), iter);
-		auto rand_part = std::string(iter, str.end());
+		auto rand_part = std::string(iter++, str.end());
 
 		if (rand_part == std::string("-1")) {
 			rand = nullptr;
-		}	else {
-			auto res = std::find(shitlist.begin(), shitlist.end(), rand_part);
+		} else {
+			auto res = std::find_if(shitlist.begin(), shitlist.end(),
+					[&rand_part](auto&& it) {
+						if (it.data == rand_part) {
+							return true;
+						}
+						return false;
+			});
+
 			if (res == shitlist.end()) {
+				std::cerr << "Rip!";
 				/* elem will be addeded later or newer */
 			}	else {
 				rand = res.ptr;
 			}
 		}
-		shitlist.insert_head(node_data, rand);
+		shitlist.insert_front(node_data, rand);
 	}
 	return shitlist;
+}
+
+
+static void shitlist_to_binfile(const list& shitlist, fs::path& path) {
+	std::ofstream file(path.string());
+	if (!file.is_open()) {
+		auto err = std::string("cant open dest file: ");
+		err += path.string();
+		throw std::runtime_error(err);
+	}
+	
+	for (auto&& node : shitlist) {
+		std::string data = node.data;
+		std::string rand = std::to_string(shitlist.find_idx(node.rand));
+		file << data;
+		file << ";";
+		file << rand;
+	}
 }
 
 int main(int argc, char** argv) {
@@ -185,6 +191,7 @@ int main(int argc, char** argv) {
 	}
 
 	list shitlist;
+
 	{
 		try {
 			auto data = file_to_vector_string(ifilepath);
