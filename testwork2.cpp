@@ -1,5 +1,4 @@
-﻿#include "testwork2.h"
-#include <iostream>
+﻿#include <iostream>
 #include <string>
 #include <vector>
 #include <fstream>
@@ -85,7 +84,7 @@ std::vector<std::string> file_to_vector_string(fs::path& filepath) {
 	std::vector<std::string> data;
 	std::ifstream file(filepath.filename().string());
 	if (file.is_open()) {
-		std::string err("Error: Cannot open file");
+		std::string err("Error: Cannot open file: ");
 		err += filepath.filename().string();
 		throw std::runtime_error(err);
 	}
@@ -114,7 +113,7 @@ list vector_string_to_shitlist(const std::vector<std::string>& data) {
 		}	else {
 			auto res = std::find(shitlist.begin(), shitlist.end(), rand_part);
 			if (res == shitlist.end()) {
-				/* elem will be addeded later or newer */
+				/* elem will be addeded later or newer (like std::stack)*/
 			}	else {
 				rand = res.ptr;
 			}
@@ -148,7 +147,7 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
-	if (!fs::exists(fs::path(ifilepath))) {
+	if (!fs::exists(ifilepath)) {
 		std::cout << "file not exist | " << ifilepath << "\n";
 	}
 
