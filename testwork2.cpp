@@ -1,5 +1,4 @@
-﻿#include "testwork2.h"
-#include <iostream>
+﻿#include <iostream>
 #include <string>
 #include <vector>
 #include <fstream>
@@ -163,7 +162,6 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
-	fs::path app_path(std::string(+argv[0]));
 	fs::path ifilepath, ofilepath;
 
 	for (int i = 1; i < argc; ++i) {
@@ -176,13 +174,13 @@ int main(int argc, char** argv) {
 			ofilepath = std::string(argv[(i + 1)]);
 		}
 	}
-#if 0
+
 	if (ifilepath.empty() || ofilepath.empty()) {
 		print_help();
 		return 0;
 	}
 
-	if (!fs::exists(fs::path(ifilepath))) {
+	if (!fs::exists(ifilepath)) {
 		std::cout << "file not exist | " << ifilepath << "\n";
 	}
 
@@ -203,6 +201,6 @@ int main(int argc, char** argv) {
 		std::cerr << E.what();
 		return -1;
 	}
-#endif
+
 	return 0;
 }
