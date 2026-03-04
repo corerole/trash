@@ -1,4 +1,5 @@
-﻿#include <iostream>
+﻿#include "testwork2.h"
+#include <iostream>
 #include <string>
 #include <vector>
 #include <fstream>
@@ -16,8 +17,8 @@ struct ListNode {
 };
 
 struct list {
-	ListNode* head;
-	ListNode* tail;
+	ListNode* head = nullptr;
+	ListNode* tail = nullptr;
 
 	struct iterator {
 		using value_type = ListNode;
@@ -28,7 +29,7 @@ struct list {
 
 		pointer ptr = nullptr;
 
-		auto operator==(const iterator& o) { return ptr == o.ptr; }
+		bool operator==(const iterator& o) const { return ptr == o.ptr; }
 
 		iterator(pointer ptr) : ptr(ptr) {}
 
@@ -39,6 +40,18 @@ struct list {
 
 		ListNode& operator*() { return *ptr; }
 	};
+
+	private:
+		ListNode* add_node(std::string data, ListNode* rand, ListNode* prev) {
+			auto node = new ListNode;
+			node->data = data;
+			node->next = nullptr;
+			node->prev = prev;
+			node->rand = rand;
+			return node;
+		}
+
+	public:
 
 	list() = default;
 
@@ -53,7 +66,28 @@ struct list {
 	iterator begin() const { return iterator(head); }
 	iterator end() const { return iterator(tail); }
 
-	ListNode* insert(std::string data, ListNode* rand) { }
+	ListNode* insert_head(std::string data, ListNode* rand) {
+		if (head == nullptr) {
+			head = add_node(data, rand, nullptr); tail = head;
+			return head;
+		}
+		auto tmp = head;
+		head = add_node(data, rand, nullptr);
+		head->next = tmp;
+		tmp->prev = head;
+		return head;
+	}
+
+	~list() { 
+		tail = nullptr;
+		while (head != nullptr) {
+			ListNode* tmp = head;
+			head = head->next;
+			delete tmp;
+		}
+	}
+
+
 };
 
 static void print_help() {
@@ -84,7 +118,7 @@ std::vector<std::string> file_to_vector_string(fs::path& filepath) {
 	std::vector<std::string> data;
 	std::ifstream file(filepath.filename().string());
 	if (file.is_open()) {
-		std::string err("Error: Cannot open file: ");
+		std::string err("Error: Cannot open file");
 		err += filepath.filename().string();
 		throw std::runtime_error(err);
 	}
@@ -113,12 +147,12 @@ list vector_string_to_shitlist(const std::vector<std::string>& data) {
 		}	else {
 			auto res = std::find(shitlist.begin(), shitlist.end(), rand_part);
 			if (res == shitlist.end()) {
-				/* elem will be addeded later or newer (like std::stack)*/
+				/* elem will be addeded later or newer */
 			}	else {
 				rand = res.ptr;
 			}
 		}
-		shitlist.insert(node_data, rand);
+		shitlist.insert_head(node_data, rand);
 	}
 	return shitlist;
 }
@@ -129,25 +163,26 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
-	fs::path app_path(argv[0]);
+	fs::path app_path(std::string(+argv[0]));
 	fs::path ifilepath, ofilepath;
 
 	for (int i = 1; i < argc; ++i) {
-		std::string arg(argv[i]);
-		if (arg == "-i") {
-			ifilepath = std::string(argv[(i + 1)]);
+		std::string arg(+argv[i]);
+		if (arg == std::string("-i")) {
+			auto x = argv[(i + 1)];
+			ifilepath = std::string(x);
 		}
-		if (arg == "-o") {
+		if (arg == std::string("-o")) {
 			ofilepath = std::string(argv[(i + 1)]);
 		}
 	}
-
+#if 0
 	if (ifilepath.empty() || ofilepath.empty()) {
 		print_help();
 		return 0;
 	}
 
-	if (!fs::exists(ifilepath)) {
+	if (!fs::exists(fs::path(ifilepath))) {
 		std::cout << "file not exist | " << ifilepath << "\n";
 	}
 
@@ -156,8 +191,7 @@ int main(int argc, char** argv) {
 		try {
 			auto data = file_to_vector_string(ifilepath);
 			shitlist = vector_string_to_shitlist(data);
-		}
-		catch (const std::exception& E) {
+		}	catch (const std::exception& E) {
 			std::cerr << E.what();
 			return -1;
 		}
@@ -169,6 +203,6 @@ int main(int argc, char** argv) {
 		std::cerr << E.what();
 		return -1;
 	}
-
+#endif
 	return 0;
 }
