@@ -81,6 +81,7 @@ struct list {
 			if (curr == node) { return hop; }
 			++hop;
 		}
+		return hop;
 	}
 
 	ListNode* find_node_by_hop_from_tail(int hop) {
